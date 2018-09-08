@@ -502,15 +502,14 @@ mod tests {
     use httpmessage::HttpMessage;
     use server::h1decoder::Message;
     use server::settings::{ServerSettings, WorkerSettings};
-    use server::{Connections, KeepAlive, Request};
+    use server::{KeepAlive, Request};
 
-    fn wrk_settings() -> Rc<WorkerSettings<HttpApplication>> {
-        Rc::new(WorkerSettings::<HttpApplication>::new(
+    fn wrk_settings() -> WorkerSettings<HttpApplication> {
+        WorkerSettings::<HttpApplication>::new(
             Vec::new(),
             KeepAlive::Os,
             ServerSettings::default(),
-            Connections::default(),
-        ))
+        )
     }
 
     impl Message {
@@ -629,9 +628,9 @@ mod tests {
     fn test_req_parse1() {
         let buf = Buffer::new("GET /test HTTP/1.1\r\n\r\n");
         let readbuf = BytesMut::new();
-        let settings = Rc::new(wrk_settings());
+        let settings = wrk_settings();
 
-        let mut h1 = Http1::new(Rc::clone(&settings), buf, None, readbuf, false, None);
+        let mut h1 = Http1::new(settings.clone(), buf, None, readbuf, false, None);
         h1.poll_io();
         h1.poll_io();
         assert_eq!(h1.tasks.len(), 1);
@@ -642,9 +641,9 @@ mod tests {
         let buf = Buffer::new("");
         let readbuf =
             BytesMut::from(Vec::<u8>::from(&b"GET /test HTTP/1.1\r\n\r\n"[..]));
-        let settings = Rc::new(wrk_settings());
+        let settings = wrk_settings();
 
-        let mut h1 = Http1::new(Rc::clone(&settings), buf, None, readbuf, true, None);
+        let mut h1 = Http1::new(settings.clone(), buf, None, readbuf, true, None);
         h1.poll_io();
         assert_eq!(h1.tasks.len(), 1);
     }
@@ -653,9 +652,9 @@ mod tests {
     fn test_req_parse_err() {
         let buf = Buffer::new("GET /test HTTP/1\r\n\r\n");
         let readbuf = BytesMut::new();
-        let settings = Rc::new(wrk_settings());
+        let settings = wrk_settings();
 
-        let mut h1 = Http1::new(Rc::clone(&settings), buf, None, readbuf, false, None);
+        let mut h1 = Http1::new(settings.clone(), buf, None, readbuf, false, None);
         h1.poll_io();
         h1.poll_io();
         assert!(h1.flags.contains(Flags::ERROR));
